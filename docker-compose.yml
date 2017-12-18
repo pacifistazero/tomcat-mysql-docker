@@ -1,0 +1,38 @@
+version: '2'
+
+networks:
+  tomcat-mysql:
+    driver: bridge
+
+services:
+    mysql:
+      image: iandrian/alpine-mysql
+      build: ./mysql
+      container_name: mysql
+      restart: always
+      volumes:
+        - ./mysql/mysql-datadir:/var/lib/mysql
+      ports:
+        - 3307:3306
+      networks:
+        - tomcat-mysql
+      command: 
+        - setup-mysql.sh
+    
+    tomcat:
+      image: iandrian/alpine-tomcat
+      build: ./tomcat
+      container_name: tomcat
+      restart: always
+      environment:      
+        JDBC_URL: jdbc:mysql://mysql:3306/TEST?connectTimeout=0&amp;socketTimeout=0&amp;autoReconnect=true
+        JDBC_USER: admin
+        JDBC_PASS: password
+      ports:
+        - 8080:8080
+      depends_on:
+        - mysql
+      links:
+        - mysql:mysql
+      networks:
+        - tomcat-mysql
